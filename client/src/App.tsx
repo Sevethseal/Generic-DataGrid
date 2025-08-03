@@ -1,17 +1,33 @@
-import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
-import DataTable from './components/DataTable';
+import React from "react";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import Layout from "./Layout/Layout";
+import Home from "./pages/Home";
+import Detail from "./pages/Detail";
 
-const App: React.FC = () => {
-    return (
-        <Router>
-            <Switch>
-                <Route path="/" exact component={Dashboard} />
-                <Route path="/data" component={DataTable} />
-            </Switch>
-        </Router>
-    );
-};
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#1976d2",
+    },
+  },
+});
+
+const App: React.FC = () => (
+  <ThemeProvider theme={theme}>
+    <CssBaseline />
+    <Router>
+      <Layout>
+        <Switch>
+          {/* v5 uses `exact` to avoid prefix matches */}
+          <Route exact path="/" component={Home} />
+          {/* Pass the match.params.id into your component via props */}
+          <Route path="/detail/:id" component={Detail} />
+        </Switch>
+      </Layout>
+    </Router>
+  </ThemeProvider>
+);
 
 export default App;
