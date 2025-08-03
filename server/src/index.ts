@@ -1,34 +1,26 @@
-import express from "express";
+import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-import { createConnection } from "typeorm"; // or Sequelize, depending on your choice
-import routes from "./routes"; // Import your routes
-import { errorHandler } from "./middleware"; // Import your error handler middleware
+import router from "./routes";
+import { errorHandler } from "./middleware";
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Database connection
-// createConnection()
-//   .then(() => {
-//     console.log("Database connected successfully");
-//   })
-//   .catch((error) => {
-//     console.error("Database connection error:", error);
-//   });
+app.use("/api", router);
 
-// Routes
-app.use("/api", routes);
+// 404 handler
+app.use((req: Request, res: Response) => {
+  res.status(404).json({ error: "Not Found" });
+});
 
-// Error handling middleware
+// Error handler
 app.use(errorHandler);
 
-// Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server listening on http://localhost:${PORT}`);
 });

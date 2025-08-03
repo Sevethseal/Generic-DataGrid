@@ -1,1 +1,58 @@
-node_modules
+# Node dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Environment files
+.env
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Coverage
+coverage/
+*.lcov
+
+# Optional: lockfiles (if you regenerate)
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+pnpm-lock.yaml
+
+# Debug
+*.tgz
+
+# Supabase CLI artifacts
+supabase/
+.supabase/
+
+# Docker
+docker-compose.override.yml
+Dockerfile*
+
+# Test output
+junit.xml
+test-results/
+
+# Other
+.cache/
