@@ -2,9 +2,9 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "commonjs",
-    "moduleResolution": "node", // ← crucial for folder/index.ts resolution
+    "moduleResolution": "node",
     "rootDir": "./src",
-    "outDir": "../dist",
+    "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
