@@ -2,25 +2,31 @@
   "name": "Generic-DataGrid",
   "version": "1.0.0",
   "description": "A full-stack application with a React front-end and an Express back-end.",
-  "main": "index.js",
+  "main": "server/dist/index.js",
   "scripts": {
-    "start": "node server/src/index.js",
+    "start": "node server/dist/index.js",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "cd server && npm ci && npm run build",
+    "build:client": "cd client && npm ci && npm run build",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "nodemon server/src/index.js",
-    "client": "npm start --prefix client",
-    "build": "npm run build --prefix client"
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm start",
+    "postinstall": "npm ci --prefix server && npm ci --prefix client"
   },
   "workspaces": [
     "client",
     "server"
   ],
-  "author": "Your Name",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "author": "Nirmal",
   "license": "MIT",
   "dependencies": {
-    "concurrently": "^6.0.0",
-    "cors": "^2.8.5"
+    "concurrently": "^8.2.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.0"
+    "nodemon": "^3.0.2"
   }
 }
