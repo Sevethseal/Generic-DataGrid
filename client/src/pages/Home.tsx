@@ -4,8 +4,15 @@ import DataGrid from "../components/DataGrid/DataGrid";
 import useDataGrid from "../hooks/useDataGrid";
 
 const Home: React.FC = () => {
-  const { data, loading, searchTerm, filters, handleSearch, handleFilter } =
-    useDataGrid();
+  const {
+    data,
+    loading,
+    searchTerm,
+    filters,
+    handleSearch,
+    handleFilter,
+    loadData,
+  } = useDataGrid();
 
   return (
     <Box>
@@ -23,6 +30,7 @@ const Home: React.FC = () => {
         onFilter={handleFilter}
         searchTerm={searchTerm}
         filters={filters}
+        onRefresh={loadData}
       />
     </Box>
   );

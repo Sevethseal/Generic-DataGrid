@@ -16,6 +16,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Alert,
+  Grid,
 } from "@mui/material";
 import { ColDef, GridApi, RowNode, GridReadyEvent } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
@@ -23,6 +25,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import FilterToolbar from "./FilterToolbar";
 import ActionRenderer from "./ActionRenderer";
 import { DataGridProps } from "../../types";
+import { createItem } from "../../services/api";
 
 const STATIC_COLUMN_DEFS: ColDef[] = [
   {
@@ -134,7 +137,7 @@ const STATIC_COLUMN_DEFS: ColDef[] = [
 
 interface ExtendedDataGridProps extends DataGridProps {
   /** Callback to add a new row via API */
-  onAddRow?: (newRow: Record<string, any>) => Promise<void>;
+  onRefresh: () => Promise<void>;
 }
 
 const DataGrid: React.FC<ExtendedDataGridProps> = ({
@@ -144,7 +147,7 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
   onFilter,
   searchTerm,
   filters,
-  onAddRow,
+  onRefresh,
 }) => {
   // reference to AG Grid API
   const gridApiRef = useRef<GridApi | null>(null);
@@ -157,6 +160,54 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
   // state for dialog
   const [open, setOpen] = useState(false);
   const [newRowData, setNewRowData] = useState<Record<string, any>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Validation logic
+  const validate = (formData: Record<string, any>) => {
+    const newErrors: Record<string, string> = {};
+
+    // Required string fields
+    [
+      "Brand",
+      "Model",
+      "RapidCharge",
+      "PowerTrain",
+      "PlugType",
+      "BodyStyle",
+      "Segment",
+    ].forEach((field) => {
+      if (!formData[field] || String(formData[field]).trim() === "") {
+        newErrors[field] = `${field} is required`;
+      }
+    });
+
+    // Numeric fields
+    [
+      "AccelSec",
+      "TopSpeed_KmH",
+      "Range_Km",
+      "Efficiency_WhKm",
+      "FastCharge_KmH",
+      "Seats",
+      "PriceEuro",
+    ].forEach((field) => {
+      const val = formData[field];
+      if (val === undefined || val === null || String(val).trim() === "") {
+        newErrors[field] = `${field} is required`;
+      } else if (isNaN(Number(val))) {
+        newErrors[field] = `${field} must be a number`;
+      }
+    });
+
+    // Date field
+    if (!formData.Date) {
+      newErrors.Date = "Date is required";
+    } else if (isNaN(new Date(formData.Date).getTime())) {
+      newErrors.Date = "Date is invalid";
+    }
+
+    return newErrors;
+  };
 
   const handleOpen = () => {
     // initialize form state
@@ -165,33 +216,39 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
       init[col.field!] = "";
     });
     setNewRowData(init);
+    setErrors({});
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
+    setNewRowData({});
+    setErrors({});
   };
 
   const handleChange =
     (field: string) => (e: ChangeEvent<HTMLInputElement>) => {
-      setNewRowData((prev) => ({ ...prev, [field]: e.target.value }));
+      const updated = { ...newRowData, [field]: e.target.value };
+      setNewRowData(updated);
+      setErrors(validate(updated));
     };
 
   const handleSubmit = async () => {
+    const validationErrors = validate(newRowData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+
     try {
-      if (onAddRow) {
-        await onAddRow(newRowData);
-      } else {
-        // fallback: directly add to grid
-        const api = gridApiRef.current;
-        if (api) {
-          api.applyTransaction({ add: [newRowData] });
-        }
-      }
+      await createItem(newRowData);
       setOpen(false);
+      setNewRowData({});
+      setErrors({});
+      await onRefresh();
     } catch (err) {
-      console.error("Failed to add row", err);
-      // show error feedback as needed
+      console.error("Failed to add row:", err);
+      alert("Failed to add row");
     }
   };
 
@@ -203,6 +260,9 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
         headerName: "Actions",
         field: "actions",
         cellRenderer: ActionRenderer,
+        cellRendererParams: {
+          onRefresh,
+        },
         width: 120,
         pinned: "right",
         sortable: false,
@@ -254,34 +314,70 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
               onGridReady={onGridReady}
               rowData={data}
               columnDefs={columnDefs}
-              defaultColDef={defaultColDef}
+              defaultColDef={{
+                ...defaultColDef,
+                editable: false,
+              }}
               pagination
               paginationPageSize={10}
               loading={loading}
-              suppressRowClickSelection
             />
           </div>
         </Box>
       </Paper>
 
       {/* Modal for adding new row */}
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle>Add New Row</DialogTitle>
         <DialogContent dividers>
-          {STATIC_COLUMN_DEFS.map((col) => (
-            <TextField
-              key={col.field}
-              margin="dense"
-              label={col.headerName}
-              fullWidth
-              value={newRowData[col.field!] || ""}
-              onChange={handleChange(col.field!)}
-            />
-          ))}
+          {/* Show validation errors as an alert */}
+          {Object.keys(errors).length > 0 && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              Please fix the following errors:{" "}
+              {Object.values(errors).join(" • ")}
+            </Alert>
+          )}
+
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            {STATIC_COLUMN_DEFS.map((col) => (
+              <Grid key={col.field}>
+                <TextField
+                  fullWidth
+                  label={col.headerName}
+                  value={newRowData[col.field!] || ""}
+                  onChange={handleChange(col.field!)}
+                  variant="outlined"
+                  size="small"
+                  error={Boolean(errors[col.field!])}
+                  helperText={errors[col.field!] || " "}
+                  type={
+                    [
+                      "AccelSec",
+                      "TopSpeed_KmH",
+                      "Range_Km",
+                      "Efficiency_WhKm",
+                      "FastCharge_KmH",
+                      "Seats",
+                      "PriceEuro",
+                    ].includes(col.field!)
+                      ? "number"
+                      : "text"
+                  }
+                />
+              </Grid>
+            ))}
+          </Grid>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
+          <Button onClick={handleClose} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            color="primary"
+            disabled={Object.keys(errors).length > 0}
+          >
             Submit
           </Button>
         </DialogActions>

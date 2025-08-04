@@ -6,6 +6,8 @@ import {
   updateItem,
   deleteItem,
   deleteItems,
+  searchItems,
+  filterItems,
 } from "../controllers/itemController";
 
 const router = Router();
@@ -16,5 +18,7 @@ router.post("/items", createItem);
 router.put("/items/:id", updateItem);
 router.delete("/items/:id", deleteItem);
 router.delete("/items", deleteItems);
+router.get("/search", searchItems);
+router.post("/filter", filterItems); 
 
 export default router;
