@@ -2,12 +2,12 @@ import { DataRow, FilterConfig } from "../types";
 import {
   ApiResponse,
   SearchParams,
-  FilterParams,
+  FilterParams as ApiFilterParams,
   ApiError,
 } from "../types/api";
 
 const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:3001/api";
+  process.env.REACT_APP_API_URL || "http://localhost:3000/api";
 
 const handleApiError = (error: any): never => {
   const apiError: ApiError = {
@@ -19,16 +19,27 @@ const handleApiError = (error: any): never => {
 
 export const fetchData = async (): Promise<DataRow[]> => {
   try {
-    // const response = await fetch(`${API_BASE_URL}/data`);
-    // if (!response.ok) throw new Error("Failed to fetch");
-
-    // const apiResponse: ApiResponse<DataRow[]> = await response.json();
-    // return apiResponse.data;
-    return getMockData();
+    const response = await fetch(`${API_BASE_URL}/items`);
+    if (!response.ok) throw new Error("Failed to fetch items");
+    const apiResponse: ApiResponse<DataRow[]> = await response.json();
+    return apiResponse.data;
   } catch (error) {
     console.error("API Error:", error);
-    // Return mock data for development
     return getMockData();
+  }
+};
+
+export const fetchById = async (id: string): Promise<DataRow> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/items/${encodeURIComponent(id)}`
+    );
+    if (!response.ok) throw new Error(`Failed to fetch item id=${id}`);
+    const apiResponse: DataRow = await response.json();
+    return apiResponse;
+  } catch (error) {
+    console.error("FetchById Error:", error);
+    return Promise.reject(error);
   }
 };
 
@@ -38,15 +49,14 @@ export const searchData = async (searchTerm: string): Promise<DataRow[]> => {
     const response = await fetch(
       `${API_BASE_URL}/search?q=${encodeURIComponent(params.q)}`
     );
-    if (!response.ok) throw new Error("Failed to search");
-
+    if (!response.ok) throw new Error("Failed to search items");
     const apiResponse: ApiResponse<DataRow[]> = await response.json();
     return apiResponse.data;
   } catch (error) {
     console.error("Search Error:", error);
-    return getMockData().filter((item: DataRow) =>
-      Object.values(item).some((value: any) =>
-        value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+    return getMockData().filter((item) =>
+      Object.values(item).some((val) =>
+        val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
   }
@@ -56,25 +66,22 @@ export const filterData = async (
   filterConfig: FilterConfig
 ): Promise<DataRow[]> => {
   try {
-    const params: FilterParams = {
+    const params: ApiFilterParams = {
       column: filterConfig.column,
       operator: filterConfig.operator,
       value: filterConfig.value,
     };
-
     const response = await fetch(`${API_BASE_URL}/filter`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(params),
     });
-
-    if (!response.ok) throw new Error("Failed to filter");
-
+    if (!response.ok) throw new Error("Failed to filter items");
     const apiResponse: ApiResponse<DataRow[]> = await response.json();
     return apiResponse.data;
   } catch (error) {
     console.error("Filter Error:", error);
-    return getMockData().filter((item: DataRow) =>
+    return getMockData().filter((item) =>
       applyFilter(
         item,
         filterConfig.column,
@@ -85,6 +92,74 @@ export const filterData = async (
   }
 };
 
+export const createItem = async (newItem: DataRow): Promise<DataRow> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/items`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newItem),
+    });
+    if (!response.ok) throw new Error("Failed to create item");
+    const apiResponse: DataRow = await response.json();
+    return apiResponse;
+  } catch (error) {
+    console.error("Create Error:", error);
+    return Promise.reject(error);
+  }
+};
+
+export const updateItem = async (
+  id: string,
+  updates: Partial<DataRow>
+): Promise<DataRow> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/items/${encodeURIComponent(id)}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      }
+    );
+    if (!response.ok) throw new Error(`Failed to update item id=${id}`);
+    const apiResponse: DataRow = await response.json();
+    return apiResponse;
+  } catch (error) {
+    console.error("Update Error:", error);
+    return Promise.reject(error);
+  }
+};
+
+export const deleteItem = async (id: string): Promise<void> => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/items/${encodeURIComponent(id)}`,
+      {
+        method: "DELETE",
+      }
+    );
+    if (!response.ok) throw new Error(`Failed to delete item id=${id}`);
+  } catch (error) {
+    console.error("Delete Error:", error);
+    return Promise.reject(error);
+  }
+};
+
+export const deleteItems = async (ids: string[]): Promise<void> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/items`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    if (!response.ok) throw new Error("Failed to delete items");
+  } catch (error) {
+    console.error("Batch Delete Error:", error);
+    return Promise.reject(error);
+  }
+};
+
+// Helpers for mock filtering
 const applyFilter = (
   item: DataRow,
   column: string,
@@ -93,7 +168,6 @@ const applyFilter = (
 ): boolean => {
   const fieldValue = item[column]?.toString().toLowerCase() || "";
   const filterValue = value.toLowerCase();
-
   switch (operator) {
     case "contains":
       return fieldValue.includes(filterValue);

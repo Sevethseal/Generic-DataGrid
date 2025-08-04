@@ -84,6 +84,7 @@ const useDataGrid = (): UseDataGridReturn => {
     filters,
     handleSearch,
     handleFilter,
+    loadData,
   };
 };
 

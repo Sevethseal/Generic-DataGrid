@@ -48,6 +48,11 @@ export interface FilterToolbarProps {
 
 export interface ActionRendererProps {
   data: DataRow;
+  searchTerm?: string;
+  filters?: any;
+  handleSearch?: (term: string) => void;
+  handleFilter?: (filters: any) => void;
+  onRefresh: () => Promise<void>;
 }
 
 export interface DetailViewProps {
@@ -61,4 +66,5 @@ export interface UseDataGridReturn {
   filters: FilterConfig;
   handleSearch: (term: string) => void;
   handleFilter: (filterConfig: FilterConfig) => void;
+  loadData: () => Promise<void>;
 }
