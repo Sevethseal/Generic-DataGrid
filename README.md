@@ -58,8 +58,7 @@ This project delivers a **generic, reusable data grid** component powered by AG 
   - Compare performance metrics side-by-side  
   - Navigate to in-depth analysis pages  
 
-- **Responsive UI**  
-  - Built with MUI for mobile and desktop  
+
 
 ---
 
@@ -70,9 +69,9 @@ This project delivers a **generic, reusable data grid** component powered by AG 
 │   ├── public/
 │   │   └── index.html
 │   ├── src/
-│   │   ├── components/         # Reusable React components (e.g. DataTable)
-│   │   ├── pages/              # Page views (e.g. Dashboard, ModelCompare)
-│   │   ├── services/           # API wrappers (axios or fetch)
+│   │   ├── components/         # Reusable React components 
+│   │   ├── pages/              # Page views 
+│   │   ├── services/           # API wrappers 
 │   │   ├── types/              # TypeScript interfaces
 │   │   ├── App.tsx             # Root component
 │   │   └── index.tsx           # Entry point
@@ -167,7 +166,7 @@ This project is configured for Render:
 - **Server:** Dockerized Express app
 - **Client:** Static build served by Render
 
-Connect your GitHub repo to Render for continuous deployment.
+Live Link:https://generic-datagrid.onrender.com/
 
 ---
 
@@ -195,6 +194,3 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 
 
-## 📄 License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
