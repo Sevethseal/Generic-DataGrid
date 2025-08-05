@@ -1,4 +1,3 @@
-// src/components/DataGrid/DataGrid.tsx
 import React, {
   useMemo,
   useRef,

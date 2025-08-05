@@ -1,5 +1,3 @@
-// src/components/DataGrid/ActionRenderer.tsx
-
 import React, { useState } from "react";
 import {
   IconButton,

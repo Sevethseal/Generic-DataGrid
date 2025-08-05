@@ -159,7 +159,7 @@ export const deleteItems = async (ids: string[]): Promise<void> => {
   }
 };
 
-// Helpers for mock filtering
+
 const applyFilter = (
   item: DataRow,
   column: string,

@@ -1,7 +1,7 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import db from "../config/db";
 
-// Define attributes interface
+
 interface ItemAttributes {
   id: number;
   Brand: string;

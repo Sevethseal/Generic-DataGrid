@@ -21,11 +21,8 @@ const App: React.FC = () => (
     <Router>
       <Layout>
         <Switch>
-          {/* v5 uses `exact` to avoid prefix matches */}
           <Route exact path="/" component={Home} />
-          {/* Pass the match.params.id into your component via props */}
           <Route path="/detail/:id" component={Detail} />
-          {/* Comparison page route */}
           <Route path="/comparison" component={ComparisonPage} />
         </Switch>
       </Layout>

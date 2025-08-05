@@ -15,7 +15,7 @@ import { ArrowBack } from "@mui/icons-material";
 import { useHistory } from "react-router-dom";
 import { DetailViewProps } from "../../types";
 
-// Map raw field keys (normalized) to friendly labels
+
 const fieldLabels: Record<string, string> = {
   brand: "Brand",
   model: "Model",
@@ -23,7 +23,6 @@ const fieldLabels: Record<string, string> = {
   horsepower: "Horsepower",
   torque: "Torque",
   fastchargekm: "Fast Charge (km)",
-  // add more custom mappings here
 };
 
 const DetailView: React.FC<DetailViewProps> = ({ data }) => {
@@ -45,7 +44,6 @@ const DetailView: React.FC<DetailViewProps> = ({ data }) => {
     );
   }
 
-  // Normalize keys by removing spaces/underscores and lowercasing
   const normalizeKey = (key: string): string =>
     key.toLowerCase().replace(/[\s_]+/g, "");
 

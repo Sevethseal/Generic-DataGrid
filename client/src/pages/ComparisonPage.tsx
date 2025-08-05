@@ -1,4 +1,3 @@
-// src/pages/ComparisonPage.tsx
 import React from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import {

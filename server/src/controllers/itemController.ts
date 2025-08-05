@@ -1,9 +1,7 @@
-// src/controllers/itemController.ts
 import { Request, Response, NextFunction } from "express";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../supabaseClient";
 
-// Pagination interface
 interface Pagination {
   page: number;
   limit: number;
@@ -12,7 +10,6 @@ interface Pagination {
 
 const TABLE_NAME = "electric_cars";
 
-// Columns classification
 const numericColumns = new Set<string>([
   "AccelSec",
   "TopSpeed_KmH",
@@ -33,7 +30,6 @@ const textColumns = new Set<string>([
   "Date",
 ]);
 
-// Supported filter params type
 export interface FilterParams {
   column: string;
   operator:
@@ -92,7 +88,6 @@ export const searchItems = async (
   }
 };
 
-// Get paginated items
 export const getItems = async (
   req: Request,
   res: Response,
@@ -119,7 +114,6 @@ export const getItems = async (
   }
 };
 
-// Get single item
 export const getItem = async (
   req: Request,
   res: Response,
@@ -144,7 +138,6 @@ export const getItem = async (
   }
 };
 
-// Create new item
 export const createItem = async (
   req: Request,
   res: Response,
@@ -175,7 +168,6 @@ export const createItem = async (
   }
 };
 
-// Update item
 export const updateItem = async (
   req: Request,
   res: Response,
@@ -197,7 +189,6 @@ export const updateItem = async (
   }
 };
 
-// Delete single item
 export const deleteItem = async (
   req: Request,
   res: Response,
@@ -214,7 +205,6 @@ export const deleteItem = async (
   }
 };
 
-// Delete multiple items
 export const deleteItems = async (
   req: Request,
   res: Response,
@@ -234,8 +224,6 @@ export const deleteItems = async (
   }
 };
 
-// Filter items with mixed numeric/text strategy
-// Filter items with mixed numeric/text strategy
 export const filterItems = async (
   req: Request<{}, {}, FilterParams>,
   res: Response,
