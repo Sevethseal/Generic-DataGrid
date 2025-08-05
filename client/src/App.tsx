@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Layout from "./Layout/Layout";
 import Home from "./pages/Home";
 import Detail from "./pages/Detail";
+import ComparisonPage from "./pages/ComparisonPage";
 
 const theme = createTheme({
   palette: {
@@ -24,6 +25,8 @@ const App: React.FC = () => (
           <Route exact path="/" component={Home} />
           {/* Pass the match.params.id into your component via props */}
           <Route path="/detail/:id" component={Detail} />
+          {/* Comparison page route */}
+          <Route path="/comparison" component={ComparisonPage} />
         </Switch>
       </Layout>
     </Router>

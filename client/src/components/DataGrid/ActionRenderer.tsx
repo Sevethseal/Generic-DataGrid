@@ -1,4 +1,5 @@
 // src/components/DataGrid/ActionRenderer.tsx
+
 import React, { useState } from "react";
 import {
   IconButton,
@@ -6,6 +7,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogContentText,
   DialogActions,
   Button,
   TextField,
@@ -20,6 +22,7 @@ import { deleteItem, updateItem } from "../../services/api";
 const ActionRenderer: React.FC<ActionRendererProps> = ({ data, onRefresh }) => {
   const history = useHistory();
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -111,18 +114,26 @@ const ActionRenderer: React.FC<ActionRendererProps> = ({ data, onRefresh }) => {
     }
   };
 
-  const handleDelete = async (): Promise<void> => {
-    if (window.confirm("Are you sure you want to delete this item?")) {
-      if (data.id !== undefined && data.id !== null) {
-        try {
-          await deleteItem(String(data.id));
-          await onRefresh();
-        } catch (err) {
-          console.error("Delete Error:", err);
-        }
-      } else {
-        console.error("Cannot delete item: id is undefined or null");
+  // Delete dialog handlers
+  const openDeleteDialog = (): void => {
+    setDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = (): void => {
+    setDeleteDialogOpen(false);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    closeDeleteDialog();
+    if (data.id !== undefined && data.id !== null) {
+      try {
+        await deleteItem(String(data.id));
+        await onRefresh();
+      } catch (err) {
+        console.error("Delete Error:", err);
       }
+    } else {
+      console.error("Cannot delete item: id is undefined or null");
     }
   };
 
@@ -162,14 +173,21 @@ const ActionRenderer: React.FC<ActionRendererProps> = ({ data, onRefresh }) => {
 
   return (
     <>
-      <Box sx={{ display: "flex", gap: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
         <IconButton size="small" color="primary" onClick={handleView}>
           <Visibility fontSize="small" />
         </IconButton>
         <IconButton size="small" color="warning" onClick={handleEdit}>
           <Edit fontSize="small" />
         </IconButton>
-        <IconButton size="small" color="error" onClick={handleDelete}>
+        <IconButton size="small" color="error" onClick={openDeleteDialog}>
           <Delete fontSize="small" />
         </IconButton>
       </Box>
@@ -183,7 +201,6 @@ const ActionRenderer: React.FC<ActionRendererProps> = ({ data, onRefresh }) => {
       >
         <DialogTitle>Edit Item</DialogTitle>
         <DialogContent>
-          {/* Show validation errors as an alert */}
           {Object.keys(errors).length > 0 && (
             <Alert severity="error" sx={{ mb: 2 }}>
               Please fix the following errors:{" "}
@@ -205,6 +222,34 @@ const ActionRenderer: React.FC<ActionRendererProps> = ({ data, onRefresh }) => {
             disabled={Object.keys(errors).length > 0}
           >
             Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={closeDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete this item? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} color="secondary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            color="error"
+            variant="contained"
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>

@@ -18,14 +18,22 @@ import {
   TextField,
   Alert,
   Grid,
+  Chip,
 } from "@mui/material";
-import { ColDef, GridApi, RowNode, GridReadyEvent } from "ag-grid-community";
+import {
+  ColDef,
+  GridApi,
+  RowNode,
+  GridReadyEvent,
+  SelectionChangedEvent,
+} from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import FilterToolbar from "./FilterToolbar";
 import ActionRenderer from "./ActionRenderer";
 import { DataGridProps } from "../../types";
 import { createItem } from "../../services/api";
+import { useHistory } from "react-router-dom"; // For React Router v5
 
 const STATIC_COLUMN_DEFS: ColDef[] = [
   {
@@ -140,6 +148,67 @@ interface ExtendedDataGridProps extends DataGridProps {
   onRefresh: () => Promise<void>;
 }
 
+// OpenAI API service
+const compareWithChatGPT = async (selectedRows: any[]): Promise<string> => {
+  try {
+    const prompt = `Compare these electric vehicles and provide insights on their performance, efficiency, and value proposition:
+
+${selectedRows
+  .map(
+    (row, index) =>
+      `Vehicle ${index + 1}: ${row.Brand} ${row.Model}
+- 0-100 km/h: ${row.AccelSec}s
+- Top Speed: ${row.TopSpeed_KmH} km/h
+- Range: ${row.Range_Km} km
+- Efficiency: ${row.Efficiency_WhKm} Wh/km
+- Fast Charge: ${row.FastCharge_KmH} km/h
+- Price: €${row.PriceEuro}
+- Body Style: ${row.BodyStyle}
+- Segment: ${row.Segment}
+- Seats: ${row.Seats}
+- Powertrain: ${row.PowerTrain}
+`
+  )
+  .join("\n\n")}
+
+Please provide a detailed comparison covering:
+1. Performance analysis
+2. Efficiency comparison
+3. Value for money assessment
+4. Use case recommendations
+5. Overall ranking and recommendation`;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`, // Make sure to set this in your .env file
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        max_tokens: 2000,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error("Error calling OpenAI API:", error);
+    throw error;
+  }
+};
+
 const DataGrid: React.FC<ExtendedDataGridProps> = ({
   data,
   loading,
@@ -149,6 +218,8 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
   filters,
   onRefresh,
 }) => {
+  const history = useHistory();
+
   // reference to AG Grid API
   const gridApiRef = useRef<GridApi | null>(null);
 
@@ -161,6 +232,49 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
   const [open, setOpen] = useState(false);
   const [newRowData, setNewRowData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // state for row selection
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [isComparing, setIsComparing] = useState(false);
+
+  // Handle selection change
+  const onSelectionChanged = useCallback((event: SelectionChangedEvent) => {
+    const selected = event.api.getSelectedRows();
+
+    // Limit selection to maximum 5 rows
+    if (selected.length > 5) {
+      // Deselect the last selected row
+      const nodesToDeselect = event.api.getSelectedNodes().slice(5);
+      nodesToDeselect.forEach((node) => node.setSelected(false));
+      setSelectedRows(selected.slice(0, 5));
+    } else {
+      setSelectedRows(selected);
+    }
+  }, []);
+
+  // Handle compare with ChatGPT
+  const handleCompareWithChatGPT = async () => {
+    if (selectedRows.length < 2) {
+      alert("Please select at least 2 rows to compare");
+      return;
+    }
+
+    setIsComparing(true);
+    try {
+      const comparison = await compareWithChatGPT(selectedRows);
+
+      // Navigate to comparison page with data
+      history.push("/comparison", {
+        selectedVehicles: selectedRows,
+        comparison: comparison,
+      });
+    } catch (error) {
+      console.error("Failed to get comparison:", error);
+      alert("Failed to get comparison from ChatGPT. Please try again.");
+    } finally {
+      setIsComparing(false);
+    }
+  };
 
   // Validation logic
   const validate = (formData: Record<string, any>) => {
@@ -252,9 +366,18 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
     }
   };
 
-  // build column definitions including actions
+  // build column definitions including checkbox selection and actions
   const columnDefs = useMemo<ColDef[]>(
     () => [
+      {
+        checkboxSelection: true,
+        headerCheckboxSelection: true,
+        width: 50,
+        pinned: "left",
+        sortable: false,
+        filter: false,
+        resizable: false,
+      },
       ...STATIC_COLUMN_DEFS,
       {
         headerName: "Actions",
@@ -287,8 +410,36 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
   return (
     <>
       <Paper elevation={3}>
-        {/* Add New Row button */}
-        <Box sx={{ p: 1, display: "flex", justifyContent: "flex-end" }}>
+        {/* Action buttons and selection info */}
+        <Box
+          sx={{
+            p: 1,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            {selectedRows.length > 0 && (
+              <Chip
+                label={`${selectedRows.length} selected (max 5)`}
+                color={selectedRows.length >= 5 ? "warning" : "primary"}
+                variant="outlined"
+              />
+            )}
+            {selectedRows.length >= 2 && (
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleCompareWithChatGPT}
+                disabled={isComparing}
+                sx={{ ml: 1 }}
+              >
+                {isComparing ? "Comparing..." : "Compare with ChatGPT"}
+              </Button>
+            )}
+          </Box>
+
           <Button variant="contained" color="primary" onClick={handleOpen}>
             Add New Row
           </Button>
@@ -321,6 +472,9 @@ const DataGrid: React.FC<ExtendedDataGridProps> = ({
               pagination
               paginationPageSize={10}
               loading={loading}
+              rowSelection="multiple"
+              onSelectionChanged={onSelectionChanged}
+              suppressRowClickSelection={true}
             />
           </div>
         </Box>

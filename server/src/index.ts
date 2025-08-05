@@ -1,5 +1,3 @@
-// server/src/index.ts
-
 import path from "path";
 import express, { Request, Response } from "express";
 import dotenv from "dotenv";
@@ -12,10 +10,27 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS for your frontend origin
+// Define the list of allowed origins
+const whitelist = [
+  "https://generic-datagrid.onrender.com",
+  "http://localhost:3001",
+];
+
+// CORS configuration
 app.use(
   cors({
-    origin: "https://generic-datagrid.onrender.com", // or '*' during development
+    origin: (origin, callback) => {
+      // allow requests with no origin (e.g. mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (whitelist.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(
+          new Error(`CORS policy violation: Origin ${origin} is not allowed`),
+          false
+        );
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
@@ -25,7 +40,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Mount your API routes under /api
+// Mount API routes under /api
 app.use("/api", router);
 
 // Serve React static files from client/build
@@ -40,6 +55,7 @@ app.get("*", (_req: Request, res: Response) => {
 // Error handling middleware
 app.use(errorHandler);
 
+// Start server
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });

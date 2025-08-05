@@ -1,16 +1,30 @@
 import React from "react";
 import {
   Card,
+  CardHeader,
   CardContent,
   Typography,
   Grid,
   Chip,
   Box,
   Button,
+  Divider,
+  Stack,
 } from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import { useHistory } from "react-router-dom";
 import { DetailViewProps } from "../../types";
+
+// Map raw field keys (normalized) to friendly labels
+const fieldLabels: Record<string, string> = {
+  brand: "Brand",
+  model: "Model",
+  price: "Price",
+  horsepower: "Horsepower",
+  torque: "Torque",
+  fastchargekm: "Fast Charge (km)",
+  // add more custom mappings here
+};
 
 const DetailView: React.FC<DetailViewProps> = ({ data }) => {
   const history = useHistory();
@@ -18,19 +32,32 @@ const DetailView: React.FC<DetailViewProps> = ({ data }) => {
   const handleBack = (): void => {
     history.push("/");
   };
-  console.log("DetailView data:", data);
+
   if (!data) {
     return (
-      <Card>
+      <Card sx={{ maxWidth: 600, mx: "auto", my: 4, p: 2 }}>
         <CardContent>
-          <Typography>No data available</Typography>
+          <Typography variant="h6" align="center">
+            No data available
+          </Typography>
         </CardContent>
       </Card>
     );
   }
 
+  // Normalize keys by removing spaces/underscores and lowercasing
+  const normalizeKey = (key: string): string =>
+    key.toLowerCase().replace(/[\s_]+/g, "");
+
   const formatFieldName = (key: string): string => {
-    return key.replace(/([A-Z])/g, " $1").trim();
+    const norm = normalizeKey(key);
+    return (
+      fieldLabels[norm] ||
+      key
+        .replace(/([A-Z])/g, " $1")
+        .replace(/[_]+/g, " ")
+        .replace(/^./, (str) => str.toUpperCase())
+    );
   };
 
   const renderFieldValue = (value: any): React.ReactNode => {
@@ -43,32 +70,51 @@ const DetailView: React.FC<DetailViewProps> = ({ data }) => {
         />
       );
     }
+
+    if (value instanceof Date) {
+      return value.toLocaleDateString();
+    }
+
     return value?.toString() || "N/A";
   };
 
+  const entries = Object.entries(data);
+
   return (
-    <Box>
-      <Button startIcon={<ArrowBack />} onClick={handleBack} sx={{ mb: 2 }}>
+    <Box
+      sx={{ p: 3, maxWidth: 900, mx: "auto", bgcolor: "background.default" }}
+    >
+      <Button
+        startIcon={<ArrowBack />}
+        onClick={handleBack}
+        sx={{ mb: 3 }}
+        variant="outlined"
+      >
         Back to Grid
       </Button>
 
-      <Card>
+      <Card sx={{ boxShadow: 3 }}>
+        <CardHeader title={`${data.Brand} ${data.Model}`} />
+        <Divider />
         <CardContent>
-          <Typography variant="h4" gutterBottom>
-            {data.Brand} {data.Model}
-          </Typography>
-
-          <Grid container spacing={3}>
-            {Object.entries(data).map(([key, value]) => (
+          <Grid container spacing={2}>
+            {entries.map(([key, value]) => (
               <Grid key={key}>
-                <Box>
-                  <Typography variant="h6" color="primary">
+                <Stack
+                  spacing={1}
+                  sx={{
+                    p: 2,
+                    bgcolor: "background.paper",
+                    borderRadius: 1,
+                  }}
+                >
+                  <Typography variant="subtitle2" color="text.secondary">
                     {formatFieldName(key)}
                   </Typography>
                   <Typography variant="body1">
                     {renderFieldValue(value)}
                   </Typography>
-                </Box>
+                </Stack>
               </Grid>
             ))}
           </Grid>
