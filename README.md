@@ -22,7 +22,7 @@ A full-stack, generic data table application with powerful CRUD operations, sear
 
 ## 🚀 Project Overview
 
-This project delivers a **generic, reusable data grid** component powered by AG Grid and styled with Material UI. The front-end is a React + TypeScript client that interacts with an Express.js + TypeScript server, which in turn communicates with a PostgreSQL database hosted on Supabase. A flagship feature uses OpenAI's API to compare and analyze up to 5 AI models side-by-side.
+This project delivers a **generic, reusable data grid** component powered by AG Grid and styled with Material UI. The front-end is a React + TypeScript client that interacts with an Express.js + TypeScript server, which in turn communicates with a PostgreSQL database hosted on Supabase. A flagship feature uses OpenAI's API to compare and analyze up to 5  models side-by-side.
 
 ---
 
