@@ -54,7 +54,6 @@ This project delivers a **generic, reusable data grid** component powered by AG 
   - Supabase-powered PostgreSQL storage  
 
 - **OpenAI Model Comparison**  
-  - Select up to 5 OpenAI models  
   - Compare performance metrics side-by-side  
   - Navigate to in-depth analysis pages  
 
